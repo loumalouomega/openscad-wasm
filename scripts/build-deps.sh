@@ -209,6 +209,36 @@ if ! is_done lib3mf; then
   touch_done lib3mf
 fi
 
+# ---- gmp (CGAL) ----
+if ! is_done gmp; then
+  fetch_tar gmp https://gmplib.org/download/gmp/gmp-6.3.0.tar.xz
+  ( cd "$SRC/gmp" &&
+    emconfigure ./configure --disable-assembly --host none --enable-cxx \
+      --prefix="$SYSROOT" HOST_CC=gcc &&
+    emmake make -j"$JOBS" && emmake make install )
+  touch_done gmp
+fi
+
+# ---- mpfr (CGAL) ----
+if ! is_done mpfr; then
+  fetch_tar mpfr https://www.mpfr.org/mpfr-4.2.1/mpfr-4.2.1.tar.xz
+  ( cd "$SRC/mpfr" &&
+    emconfigure ./configure --host none --with-gmp="$SYSROOT" \
+      --prefix="$SYSROOT" &&
+    emmake make -j"$JOBS" && emmake make install )
+  touch_done mpfr
+fi
+
+# ---- CGAL (required: manifold/*.cc includes CGAL headers even with
+# ENABLE_CGAL=OFF at this snapshot — Manifold-only does not compile) ----
+if ! is_done cgal; then
+  clone_at cgal https://github.com/CGAL/cgal.git v6.0.3
+  ( cd "$SRC/cgal" && emcmake cmake -B "$BUILD/cgal" -G Ninja \
+      -DBUILD_SHARED_LIBS=OFF -DCMAKE_BUILD_TYPE=Release \
+    && cmake --build "$BUILD/cgal" -j"$JOBS" && cmake --install "$BUILD/cgal" )
+  touch_done cgal
+fi
+
 # ---- boost (regex, program_options, filesystem, system) ----
 if ! is_done boost; then
   fetch_tar boost https://github.com/boostorg/boost/releases/download/boost-1.87.0/boost-1.87.0-b2-nodocs.tar.xz

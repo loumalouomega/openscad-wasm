@@ -1,14 +1,16 @@
 # @loumalouomega/openscad-wasm
 
-OpenSCAD (Manifold geometry backend) compiled to WebAssembly for Node —
-evaluate `.scad` to `.csg`/`.stl` with no `openscad` binary on `PATH`.
+OpenSCAD (CGAL + Manifold geometry backends) compiled to WebAssembly for
+Node — evaluate `.scad` to `.csg`/`.stl` with no `openscad` binary on `PATH`.
 
 Built for [CAD-Preview](https://github.com/loumalouomega/CAD-Preview)'s
 [OpenSCAD WASM port](https://github.com/loumalouomega/CAD-Preview/blob/main/doc/roadmap.md#build-and-bundle-an-openscad-wasm-port)
 roadmap item, following the same recipe as `@loumalouomega/gmsh-wasm`,
 `mmg-wasm` and `float-tetwild-wasm`. Single-threaded (`{ threads: false }`
-discipline — no pthreads, no workers), Manifold-only geometry backend in the
-first build; CGAL remains an explicit non-goal until a probe asks for it.
+discipline — no pthreads, no workers). A Manifold-only build was attempted
+first and is recorded non-viable at this snapshot (upstream's manifold
+sources include CGAL headers unconditionally); the build links CGAL with
+Manifold as the default runtime `--backend`, exactly like the playground.
 
 Status: probe build in progress — see `probe-results/`.
 

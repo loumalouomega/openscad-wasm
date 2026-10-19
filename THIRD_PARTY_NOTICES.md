@@ -30,12 +30,13 @@ stage of the probe build completes.
 | libzip | v1.11.4 | BSD-3-Clause |
 | boost (filesystem, program_options, regex, system) | 1.87.0 | BSL-1.0 |
 | lib3mf | v2.3.2 (+ `third-party/patches/lib3mf.patch`: static-lib support, `override` specifiers) | BSD-2-Clause |
+| gmp | 6.3.0 | LGPL-3.0-or-later / GPL-2.0-or-later dual |
+| mpfr | 4.2.1 | LGPL-3.0-or-later |
+| CGAL | v6.0.3 | GPL-3.0-or-later / LGPL-3.0-or-later |
 
-Deliberately NOT linked in the Manifold-only build: CGAL (+gmp/mpfr),
-cairo (upstream reports "disabled (not found)" under Emscripten). A future
-CGAL-enabled build would add CGAL (GPL-3.0-or-later / LGPL-3.0-or-later),
-gmp (LGPL-3.0-or-later/GPL-2.0-or-later dual) and mpfr (LGPL-3.0-or-later)
-rows here.
+Linked in the (CGAL-inclusive) build: CGAL (+gmp/mpfr — required, see below).
+Deliberately NOT linked: cairo (upstream reports "disabled (not found)"
+under Emscripten).
 
 ## Toolchain
 
