@@ -23,13 +23,21 @@ OPENSCAD_VERSION="$(git -C "$ROOT/openscad" describe --tags 2>/dev/null || echo 
 echo "commit: $OPENSCAD_COMMIT  version: $OPENSCAD_VERSION"
 
 emcmake cmake -G Ninja -S "$ROOT/openscad" -B "$BLD" \
-  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_BUILD_TYPE=OpenscadWasm \
+  -DCMAKE_C_FLAGS_OPENCADWASM="-O3 -DNDEBUG" \
+  -DCMAKE_CXX_FLAGS_OPENCADWASM="-O3 -DNDEBUG" \
+  -DCMAKE_EXE_LINKER_FLAGS_OPENCADWASM="" \
   -DWASM_BUILD_TYPE=node-module \
   -DENABLE_CGAL=OFF \
   -DOPENSCAD_COMMIT="$OPENSCAD_COMMIT" \
   -DOPENSCAD_VERSION="$OPENSCAD_VERSION" \
   -DSNAPSHOT=ON \
   -DEXPERIMENTAL=ON
+# NOTE: a custom build type (not Release) is deliberate: upstream adds
+# -sSINGLE_FILE only for CONFIG:Release, which would inline the .wasm as
+# base64 into the .js. This package ships the .wasm as a separate,
+# separately-replaceable asset (gmsh-wasm dist/gmsh-core.wasm precedent,
+# LGPL §4 layout), so single-file is off and -O3 -DNDEBUG are set explicitly.
 
 cmake --build "$BLD" -j"$JOBS"
 ls -la "$BLD/openscad.js" "$BLD/openscad.wasm"
