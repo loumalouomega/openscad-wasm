@@ -196,6 +196,19 @@ if ! is_done libzip; then
   touch_done libzip
 fi
 
+# ---- lib3mf (3MF import/export; upstream falls back to dummy stubs without it) ----
+if ! is_done lib3mf; then
+  clone_at lib3mf https://github.com/3MFConsortium/lib3mf.git v2.3.2
+  ( cd "$SRC/lib3mf" && git apply "$ROOT/third-party/patches/lib3mf.patch" ) || true
+  ( cd "$SRC/lib3mf" &&
+    LDFLAGS="$LDFLAGS -L$SYSROOT/lib" emcmake cmake -B "$BUILD/lib3mf" -G Ninja \
+      -DLIB3MF_TESTS=OFF -DUSE_INCLUDED_ZLIB=OFF -DUSE_INCLUDED_LIBZIP=OFF \
+      -DBUILD_SHARED_LIBS=OFF -DSTRIP_BINARIES=OFF \
+      -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DCMAKE_BUILD_TYPE=Release \
+    && cmake --build "$BUILD/lib3mf" -j"$JOBS" && cmake --install "$BUILD/lib3mf" )
+  touch_done lib3mf
+fi
+
 # ---- boost (regex, program_options, filesystem, system) ----
 if ! is_done boost; then
   fetch_tar boost https://github.com/boostorg/boost/releases/download/boost-1.87.0/boost-1.87.0-b2-nodocs.tar.xz
