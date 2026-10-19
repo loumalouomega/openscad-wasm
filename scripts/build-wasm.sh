@@ -17,20 +17,20 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BLD="${1:-$ROOT/build-node-module}"
 JOBS="$(nproc)"
 
-# Upstream's Emscripten block hardcodes the docker path /emsdk (libz.a,
-# PKG_CONFIG_PATH). Apply our small sysroot patch (carried in
-# third-party/patches/, DSchroer-style) so any emsdk location works.
-# Idempotent: skipped when already applied.
-if ! git -C "$ROOT/openscad" apply --check "$ROOT/third-party/patches/openscad-emsdk-sysroot.patch" >/dev/null 2>&1; then
-  if git -C "$ROOT/openscad" diff --quiet -- CMakeLists.txt; then
-    echo "sysroot patch already applied"
+# Upstream deltas carried as patches (DSchroer-style), applied idempotently:
+# - openscad-emsdk-sysroot.patch: $EMSDK instead of hardcoded docker /emsdk.
+# - openscad-wasm-memfs.patch: OPENSCAD_WASM_MEMFS_ONLY knob to drop
+#   -sNODERAWFS (pure-MEMFS root for bytes-in/bytes-out API use).
+for patch in openscad-emsdk-sysroot.patch openscad-wasm-memfs.patch; do
+  if git -C "$ROOT/openscad" apply --check "$ROOT/third-party/patches/$patch" >/dev/null 2>&1; then
+    git -C "$ROOT/openscad" apply "$ROOT/third-party/patches/$patch"
+    echo "applied $patch"
+  elif git -C "$ROOT/openscad" diff --quiet -- CMakeLists.txt; then
+    echo "$patch already applied"
   else
-    echo "WARNING: openscad/CMakeLists.txt has local modifications; not applying sysroot patch"
+    echo "WARNING: openscad/CMakeLists.txt has local modifications; not applying $patch"
   fi
-else
-  git -C "$ROOT/openscad" apply "$ROOT/third-party/patches/openscad-emsdk-sysroot.patch"
-  echo "applied openscad-emsdk-sysroot.patch"
-fi
+done
 
 # Version metadata the way upstream CI derives it: openscad_version.cmake wants
 # YYYY.MM[.DD][-PPP][.build] (plain `git describe` output does NOT match, it
@@ -45,6 +45,7 @@ emcmake cmake -G Ninja -S "$ROOT/openscad" -B "$BLD" \
   -DCMAKE_CXX_FLAGS_OPENCADWASM="-O3 -DNDEBUG" \
   -DCMAKE_EXE_LINKER_FLAGS_OPENCADWASM="" \
   -DWASM_BUILD_TYPE=node-module \
+  -DOPENSCAD_WASM_MEMFS_ONLY=ON \
   -DENABLE_CGAL=ON \
   -DENABLE_TESTS=OFF \
   -DOPENSCAD_COMMIT="$OPENSCAD_COMMIT" \
