@@ -17,12 +17,25 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BLD="${1:-$ROOT/build-node-module}"
 JOBS="$(nproc)"
 
+# Upstream's Emscripten block hardcodes the docker path /emsdk (libz.a,
+# PKG_CONFIG_PATH). Instead of patching upstream, overlay our emsdk at
+# /emsdk with bubblewrap when that path does not exist (provenance stays
+# byte-stock upstream; same trick as the playground's QEMU note, rootless).
+BWRAP=()
+if [ ! -d /emsdk ] && command -v bwrap >/dev/null; then
+  BWRAP=(bwrap --bind / / --bind "$EMSDK" /emsdk --)
+fi
+
 # Version metadata the way upstream CI derives it: openscad_version.cmake wants
 # YYYY.MM[.DD][-PPP][.build] (plain `git describe` output does NOT match, it
 # fails the math() parse), so use today's date like the in-tree default.
 OPENSCAD_COMMIT="$(git -C "$ROOT/openscad" rev-parse --short HEAD)"
 OPENSCAD_VERSION="$(date +%Y.%m.%d)"
 echo "commit: $OPENSCAD_COMMIT  version: $OPENSCAD_VERSION"
+
+emcmake() { "${BWRAP[@]}" command emcmake "$@"; }
+cmake() { "${BWRAP[@]}" command cmake "$@"; }
+export -f emcmake cmake 2>/dev/null || true
 
 emcmake cmake -G Ninja -S "$ROOT/openscad" -B "$BLD" \
   -DCMAKE_BUILD_TYPE=OpenscadWasm \
