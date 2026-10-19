@@ -1,0 +1,40 @@
+{
+  "name": "@loumalouomega/openscad-wasm",
+  "version": "0.1.0",
+  "description": "OpenSCAD (Manifold backend) compiled to WebAssembly for Node — evaluate .scad to .csg/.stl with no openscad binary on PATH",
+  "license": "GPL-3.0-or-later",
+  "author": "Vicente Mataix Ferrándiz",
+  "homepage": "https://github.com/loumalouomega/openscad-wasm",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/loumalouomega/openscad-wasm.git"
+  },
+  "type": "module",
+  "main": "./dist/openscad.cjs",
+  "module": "./dist/openscad.mjs",
+  "types": "./dist/openscad.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/openscad.d.ts",
+      "import": "./dist/openscad.mjs",
+      "require": "./dist/openscad.cjs"
+    },
+    "./openscad-core.wasm": "./dist/openscad-core.wasm"
+  },
+  "files": [
+    "dist/",
+    "LICENSE",
+    "NOTICE",
+    "THIRD_PARTY_NOTICES.md",
+    "README.md"
+  ],
+  "scripts": {
+    "build:deps": "scripts/build-deps.sh",
+    "build:wasm": "scripts/build-wasm.sh",
+    "build": "npm run build:wasm",
+    "test": "node --test test/smoke.test.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

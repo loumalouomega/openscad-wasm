@@ -1,0 +1,14 @@
+OpenSCAD — https://openscad.org — Copyright the OpenSCAD authors.
+Manifold — https://github.com/elalish/manifold — Copyright the Manifold authors.
+Clipper2 — https://github.com/AngusJohnson/Clipper2 — Copyright Angus Johnson.
+
+This package's own wrapper sources (src/, scripts/, test/) are
+Copyright (C) 2026 Vicente Mataix Ferrándiz and openscad-wasm contributors,
+distributed under GPL-3.0-or-later (see LICENSE).
+
+The distributed `.wasm` additionally links the support libraries listed in
+THIRD_PARTY_NOTICES.md under their respective licenses.
+
+Corresponding source: the `openscad` submodule at the pinned commit plus
+scripts/build-deps.sh and scripts/build-wasm.sh in this repository — see
+LICENSE ("Corresponding source") for the full offer.
