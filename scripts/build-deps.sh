@@ -170,7 +170,8 @@ if ! is_done eigen; then
   clone_at eigen https://gitlab.com/libeigen/eigen.git 5.0.1
   ( cd "$SRC/eigen" && emcmake cmake -B "$BUILD/eigen" -G Ninja \
       -DCMAKE_INSTALL_PREFIX="$SYSROOT" -DCMAKE_BUILD_TYPE=Release \
-      -DBUILD_TESTING=OFF \
+      -DBUILD_TESTING=OFF -DEIGEN_BUILD_TESTING=OFF -DEIGEN_BUILD_BLAS=OFF \
+      -DEIGEN_BUILD_LAPACK=OFF -DEIGEN_BUILD_DOC=OFF -DEIGEN_BUILD_DEMOS=OFF \
     && cmake --build "$BUILD/eigen" -j"$JOBS" && cmake --install "$BUILD/eigen" )
   ln -sfn "$SYSROOT/include/eigen3/Eigen" "$SYSROOT/include/Eigen"
   touch_done eigen
