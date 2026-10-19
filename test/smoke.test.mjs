@@ -44,15 +44,14 @@ for (const name of CASES) {
     const { renderToCsg } = await import(DIST_MJS);
     const scad = readFileSync(join(FIXDIR, `${name}.scad`), "utf8");
     const extraFiles = {};
-    let source = scad;
     if (name === "include-main") {
-      // Stage both files under MEMFS root so the relative include resolves
-      // the way cwd=source-dir does on the binary path.
-      extraFiles["/i.scad"] = readFileSync(join(FIXDIR, "include-lib.scad"), "utf8");
-      source = scad.replace("include-lib.scad", "i.scad");
+      // Stage under the real name: the fixture uses `include <...>` (library
+      // form), which resolves against the input's directory — MEMFS root
+      // here, the same way cwd=source-dir works on the binary path.
+      extraFiles["/include-lib.scad"] = readFileSync(join(FIXDIR, "include-lib.scad"), "utf8");
     }
     const t0 = Date.now();
-    const csg = await renderToCsg(source, { extraFiles });
+    const csg = await renderToCsg(scad, { extraFiles });
     const ms = Date.now() - t0;
     const oracle = binaryCsg(name);
     console.log(`${name}: wasm ${ms}ms, ${csg.length} bytes (oracle ${oracle.length})`);

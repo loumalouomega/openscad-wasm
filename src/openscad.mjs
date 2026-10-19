@@ -59,8 +59,18 @@ export async function initOpenSCAD(options = {}) {
     printErr: options.collect
       ? (...args) => options.collect.push(args.join(" "))
       : (...args) => console.error(...args),
+    // NOTE: this glue ignores a Module.wasmBinary property and always
+    // locates openscad.wasm next to the factory via locateFile/new URL.
+    // Inject separately-shipped bytes here instead: the callback receives
+    // the WebAssembly.Instance (NOT the {module, instance} result object —
+    // passing that trips `missing Wasm export: __main_argc_argv`).
     instantiateWasm(imports, receiveInstance) {
-      WebAssembly.instantiate(wasmBinary, imports).then(receiveInstance);
+      WebAssembly.instantiate(wasmBinary, imports).then(
+        (result) => receiveInstance(result.instance),
+        (err) => {
+          throw err;
+        },
+      );
     },
     ...options,
     // Caller overrides win for print/printErr/wasmBinary, but these two are
