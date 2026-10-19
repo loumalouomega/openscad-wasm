@@ -17,9 +17,11 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BLD="${1:-$ROOT/build-node-module}"
 JOBS="$(nproc)"
 
-# Version metadata the way upstream CI derives it.
+# Version metadata the way upstream CI derives it: openscad_version.cmake wants
+# YYYY.MM[.DD][-PPP][.build] (plain `git describe` output does NOT match, it
+# fails the math() parse), so use today's date like the in-tree default.
 OPENSCAD_COMMIT="$(git -C "$ROOT/openscad" rev-parse --short HEAD)"
-OPENSCAD_VERSION="$(git -C "$ROOT/openscad" describe --tags 2>/dev/null || echo "unknown")"
+OPENSCAD_VERSION="$(date +%Y.%m.%d)"
 echo "commit: $OPENSCAD_COMMIT  version: $OPENSCAD_VERSION"
 
 emcmake cmake -G Ninja -S "$ROOT/openscad" -B "$BLD" \
