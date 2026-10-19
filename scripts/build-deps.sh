@@ -146,6 +146,9 @@ if ! is_done fontconfig; then
   ( cd "$SRC/fontconfig" &&
     export FREETYPE_CFLAGS="-I$SYSROOT/include/freetype2" &&
     export FREETYPE_LIBS="-lfreetype -lz" &&
+    # va_copy probe tries to RUN a test binary — hard error under cross.
+    # Emscripten is C99 va_copy-clean, so pre-seed the cache.
+    export ac_cv_va_copy=C99 &&
     emconfigure ./autogen.sh --host none --disable-docs --disable-shared \
       --enable-static --disable-cache-build --sysconfdir=/ --localstatedir=/ \
       --with-default-fonts=/fonts --enable-libxml2 --prefix="$SYSROOT" &&
