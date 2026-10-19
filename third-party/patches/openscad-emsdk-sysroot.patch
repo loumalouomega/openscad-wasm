@@ -1,0 +1,14 @@
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -308,9 +308,9 @@ if (CMAKE_SYSTEM_NAME STREQUAL Emscripten)
+   set(MANIFOLD_PAR OFF CACHE BOOL "" FORCE)
+   set(NULLGL ON CACHE BOOL "" FORCE)
+   set(USE_MIMALLOC OFF CACHE BOOL "" FORCE)
+-  set(ENV{PKG_CONFIG_PATH} "/emsdk/upstream/emscripten/cache/sysroot/lib/pkgconfig")
++  set(ENV{PKG_CONFIG_PATH} "$ENV{EMSDK}/upstream/emscripten/cache/sysroot/lib/pkgconfig")
+   target_compile_definitions(OpenSCADLibInternal PUBLIC CGAL_DISABLE_ROUNDING_MATH_CHECK)
+-  target_link_libraries(OpenSCADLibInternal PUBLIC /emsdk/upstream/emscripten/cache/sysroot/lib/libz.a)
++  target_link_libraries(OpenSCADLibInternal PUBLIC $ENV{EMSDK}/upstream/emscripten/cache/sysroot/lib/libz.a)
+ 
+   # https://emscripten.org/docs/tools_reference/emcc.html
+   # https://emscripten.org/docs/tools_reference/settings_reference.html

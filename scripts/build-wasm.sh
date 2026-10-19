@@ -18,12 +18,18 @@ BLD="${1:-$ROOT/build-node-module}"
 JOBS="$(nproc)"
 
 # Upstream's Emscripten block hardcodes the docker path /emsdk (libz.a,
-# PKG_CONFIG_PATH). Instead of patching upstream, overlay our emsdk at
-# /emsdk with bubblewrap when that path does not exist (provenance stays
-# byte-stock upstream; same trick as the playground's QEMU note, rootless).
-BWRAP=()
-if [ ! -d /emsdk ] && command -v bwrap >/dev/null; then
-  BWRAP=(bwrap --bind / / --bind "$EMSDK" /emsdk --)
+# PKG_CONFIG_PATH). Apply our small sysroot patch (carried in
+# third-party/patches/, DSchroer-style) so any emsdk location works.
+# Idempotent: skipped when already applied.
+if ! git -C "$ROOT/openscad" apply --check "$ROOT/third-party/patches/openscad-emsdk-sysroot.patch" >/dev/null 2>&1; then
+  if git -C "$ROOT/openscad" diff --quiet -- CMakeLists.txt; then
+    echo "sysroot patch already applied"
+  else
+    echo "WARNING: openscad/CMakeLists.txt has local modifications; not applying sysroot patch"
+  fi
+else
+  git -C "$ROOT/openscad" apply "$ROOT/third-party/patches/openscad-emsdk-sysroot.patch"
+  echo "applied openscad-emsdk-sysroot.patch"
 fi
 
 # Version metadata the way upstream CI derives it: openscad_version.cmake wants
@@ -32,10 +38,6 @@ fi
 OPENSCAD_COMMIT="$(git -C "$ROOT/openscad" rev-parse --short HEAD)"
 OPENSCAD_VERSION="$(date +%Y.%m.%d)"
 echo "commit: $OPENSCAD_COMMIT  version: $OPENSCAD_VERSION"
-
-emcmake() { "${BWRAP[@]}" command emcmake "$@"; }
-cmake() { "${BWRAP[@]}" command cmake "$@"; }
-export -f emcmake cmake 2>/dev/null || true
 
 emcmake cmake -G Ninja -S "$ROOT/openscad" -B "$BLD" \
   -DCMAKE_BUILD_TYPE=OpenscadWasm \
