@@ -150,7 +150,7 @@ if ! is_done fontconfig; then
     # Emscripten is C99 va_copy-clean, so pre-seed the cache.
     export ac_cv_va_copy=C99 &&
     emconfigure ./autogen.sh --host none --disable-docs --disable-shared \
-      --enable-static --disable-cache-build --sysconfdir=/ --localstatedir=/ \
+      --enable-static --disable-cache-build --sysconfdir="$SYSROOT" --localstatedir="$SYSROOT" \
       --with-default-fonts=/fonts --enable-libxml2 --prefix="$SYSROOT" &&
     emmake make -j"$JOBS" && emmake make install )
   touch_done fontconfig
