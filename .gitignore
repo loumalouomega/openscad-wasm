@@ -6,3 +6,5 @@ build-node-module/
 build-web/
 *.log
 node_modules/
+docs/.vitepress/dist/
+docs/.vitepress/cache/

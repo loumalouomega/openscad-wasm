@@ -1,18 +1,33 @@
 # OpenSCAD-WASM
 
-OpenSCAD (CGAL + Manifold geometry backends) compiled to WebAssembly for
-Node — evaluate `.scad` to `.csg`/`.stl` with no `openscad` binary on `PATH`.
+[![ci](https://github.com/loumalouomega/openscad-wasm/actions/workflows/ci.yml/badge.svg)](https://github.com/loumalouomega/openscad-wasm/actions/workflows/ci.yml)
+[![docs](https://github.com/loumalouomega/openscad-wasm/actions/workflows/docs.yml/badge.svg)](https://loumalouomega.github.io/openscad-wasm/)
+[![npm version](https://img.shields.io/npm/v/%40loumalouomega%2Fopenscad-wasm.svg?logo=npm&color=cb3837)](https://www.npmjs.com/package/@loumalouomega/openscad-wasm)
+[![npm downloads](https://img.shields.io/npm/dm/%40loumalouomega%2Fopenscad-wasm.svg)](https://www.npmjs.com/package/@loumalouomega/openscad-wasm)
+[![types](https://img.shields.io/badge/types-included-3178c6?logo=typescript&logoColor=white)](https://loumalouomega.github.io/openscad-wasm/guide/typescript)
+[![node](https://img.shields.io/badge/node-%E2%89%A518-339933?logo=node.js&logoColor=white)](https://nodejs.org)
+[![WebAssembly](https://img.shields.io/badge/WebAssembly-654ff0?logo=webassembly&logoColor=white)](https://webassembly.org)
+[![license](https://img.shields.io/badge/license-GPL--3.0--or--later-blue.svg)](LICENSE)
+
+[OpenSCAD](https://openscad.org) — the programmer's solid 3D CAD modeller — compiled to **WebAssembly** for Node. Evaluate `.scad` to `.csg`/`.stl` with **no `openscad` binary on `PATH`**.
+
+- ⚡ **Zero install** — the prebuilt `.wasm` ships in the package; Node ≥ 18, no toolchain
+- 🧩 **Small async API** — one-shot `renderToCsg()` or low-level `initOpenSCAD()` + `evaluateScad()`; TypeScript types included
+- 🔧 **CGAL + Manifold** backends, Manifold by default at runtime
+- 📦 Dual **ESM + CJS** entry points, no top-level await; logging goes to stderr so stdout stays clean for MCP JSON-RPC
+- 🧵 Single-threaded by design (no pthreads, no workers)
+
+> **📚 Full documentation:** <https://loumalouomega.github.io/openscad-wasm/>
 
 Built for [CAD-Preview](https://github.com/loumalouomega/CAD-Preview)'s
 [OpenSCAD WASM port](https://github.com/loumalouomega/CAD-Preview/blob/main/doc/roadmap.md#build-and-bundle-an-openscad-wasm-port)
 roadmap item, following the same recipe as `@loumalouomega/gmsh-wasm`,
-`mmg-wasm` and `float-tetwild-wasm`. Single-threaded (`{ threads: false }`
-discipline — no pthreads, no workers). A Manifold-only build was attempted
-first and is recorded non-viable at this snapshot (upstream's manifold
-sources include CGAL headers unconditionally); the build links CGAL with
-Manifold as the default runtime `--backend`, exactly like the playground.
+`mmg-wasm` and `float-tetwild-wasm`. A Manifold-only build was attempted first
+and is non-viable at the pinned snapshot (upstream's manifold sources include
+CGAL headers unconditionally), so the build links CGAL with Manifold as the
+default `--backend`, exactly like the playground.
 
-Status: probe build in progress — see `probe-results/`.
+**Status:** smoke tests pass (5/5, output byte-identical to the native binary); the `.wasm` is ≈ 24 MB. See [Probe results](https://loumalouomega.github.io/openscad-wasm/probe-results).
 
 ## Install
 
@@ -74,7 +89,22 @@ pointer — verified live against `openscad-wasm@0.0.4`). `renderToCsg()`
 therefore instantiates fresh per call (~150 ms); only pass a shared instance
 to `evaluateScad()` if the build under test proves re-entry.
 
+## Project structure
+
+```
+openscad/            OpenSCAD source (git submodule, pinned)
+third-party/         patches/ + dependency sources/builds (gitignored)
+scripts/             build-deps.sh, build-wasm.sh, stage-dist.sh
+src/                 hand-written wrapper: openscad.{mjs,cjs,d.ts}
+test/                smoke tests + fixtures
+docs/                VitePress documentation site
+probe-results/       dated build/probe logs
+dist/                build artifacts (gitignored; produced by CI)
+```
+
 ## Building from source
+
+Needs Debian/Ubuntu packages `autoconf autoconf-archive automake autopoint bison flex gettext gperf libltdl-dev libtool ninja-build pkg-config texinfo` plus `meson`. A full build takes hours.
 
 ```bash
 source ~/emsdk-6.0.5/emsdk_env.sh   # Emscripten 6.0.5, matches the probe build
@@ -86,6 +116,21 @@ npm test                            # fixtures vs binary-path oracle
 `scripts/build-deps.sh` is a native (no-docker) port of
 DSchroer/openscad-wasm's `Dockerfile.base` stages with pinned refs, minus
 CGAL/gmp/mpfr (Manifold-only). See `THIRD_PARTY_NOTICES.md` for the full list.
+
+## npm scripts
+
+| Script | Does |
+|--------|------|
+| `npm run build:deps` | build C/C++ dependencies into the emsdk sysroot |
+| `npm run build:wasm` | build OpenSCAD with Emscripten |
+| `npm test` | smoke tests (needs `dist/`) |
+| `npm run docs:dev` | live-preview the docs |
+| `npm run docs:build` | build the docs site |
+
+## Known issues
+
+- Instances are single-use in some builds; `renderToCsg()` instantiates fresh per call (~150 ms).
+- `text()` in evaluated-mesh output needs mounted fonts (CSG export works).
 
 ## Licensing
 
