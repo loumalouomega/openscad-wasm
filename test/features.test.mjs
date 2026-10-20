@@ -65,7 +65,7 @@ t("libraries are found through OPENSCADPATH", async () => {
   const r = await render("use <mylib/box.scad>; box(4);", {
     libraries: { "mylib/box.scad": "module box(s){cube(s);}" },
   });
-  assert.match(r.output, /cube\(size = 4/);
+  assert.match(r.output, /cube\(size = \[4, 4, 4\]/);
 });
 
 t("nested extraFiles directories are created", async () => {
@@ -73,7 +73,7 @@ t("nested extraFiles directories are created", async () => {
   const r = await render("include <sub/dir/a.scad>; a();", {
     extraFiles: { "/sub/dir/a.scad": "module a(){cube(5);}" },
   });
-  assert.match(r.output, /cube\(size = 5/);
+  assert.match(r.output, /cube\(size = \[5, 5, 5\]/);
 });
 
 t("customizer parameter sets apply", async () => {

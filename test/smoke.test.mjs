@@ -31,9 +31,9 @@ const HAS_ORACLE = (() => {
 
 // Substrings every correct .csg must contain (used when no oracle is available).
 const EXPECT = {
-  minimal: ["cube(size = 10"],
+  minimal: ["cube(size = [10, 10, 10]"],
   parametric: ["cube(size = [20, 10, 5]"],
-  "include-main": ["cube(size = 8"],
+  "include-main": ["cube(size = [8, 8, 8]"],
   "colour-booleans": ["difference()", "sphere("],
 };
 
