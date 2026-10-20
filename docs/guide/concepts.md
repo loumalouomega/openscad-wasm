@@ -2,7 +2,7 @@
 
 ## Single-use instances
 
-OpenSCAD's statics do not survive a second `callMain` render on the same instance in the reference build (`openscad-wasm@0.0.4`): the next call throws a bare-digit C++ exception pointer. `renderToCsg()` therefore instantiates a **fresh module per call** (~150 ms).
+OpenSCAD's statics do not survive a second `callMain` render on the same instance in the reference build (`openscad-wasm@0.0.4`): the next call throws a bare-digit C++ exception pointer. `render()` and its shortcuts therefore instantiates a **fresh module per call** (~150 ms).
 
 This package's own build was observed to re-enter successfully with `noExitRuntime: true` (2nd and 3rd renders returned rc 0; see [Probe results](/probe-results)), so sharing an instance with `evaluateScad()` is viable — but verify it for your workload.
 

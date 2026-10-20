@@ -16,7 +16,7 @@ import { renderToCsg } from '@loumalouomega/openscad-wasm';
 const csg = await renderToCsg('cube(10);');
 ```
 
-CommonJS works the same way — every entry is async:
+CommonJS works the same way — every entry is async (including pure helpers such as `extractParameters`):
 
 ```js
 const { renderToCsg } = require('@loumalouomega/openscad-wasm');

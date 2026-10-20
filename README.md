@@ -150,6 +150,7 @@ CGAL/gmp/mpfr (Manifold-only). See `THIRD_PARTY_NOTICES.md` for the full list.
 | `npm run build:wasm` | build OpenSCAD with Emscripten |
 | `npm run test:unit` | pure-JS tests (no wasm needed) |
 | `npm test` | unit + smoke + feature + browser tests (wasm tests need `dist/`) |
+| `npm run test:browser` | headless-Chromium test (needs Playwright + `dist/`) |
 | `npm run docs:dev` | live-preview the docs |
 | `npm run docs:build` | build the docs site |
 

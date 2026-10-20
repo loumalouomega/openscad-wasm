@@ -20,13 +20,13 @@ features:
     details: A prebuilt .wasm ships in the npm package. No toolchain, no native binary, Node ≥ 18.
   - icon: 🧩
     title: Small async API
-    details: renderToCsg() for one-shots, initOpenSCAD() + evaluateScad() for full control, with TypeScript types included.
+    details: render() to STL, OBJ, 3MF, SVG and more, meshes for three.js, Customizer parameters, a CLI and workers with timeouts — with TypeScript types.
   - icon: 🔧
     title: CGAL + Manifold
     details: Built from upstream OpenSCAD with both geometry backends; Manifold is the default at runtime.
   - icon: 📦
     title: ESM and CJS
-    details: Dual entry points, every export async, no top-level await. stdout stays clean for MCP JSON-RPC.
+    details: One build for Node and browsers, ESM and CJS, no top-level await. stdout stays clean for MCP JSON-RPC.
 ---
 
 ## Quick example
