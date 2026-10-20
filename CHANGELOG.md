@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-20
+
+### Fixed
+
+- `scripts/build-wasm.sh` no longer warns and continues when a submodule patch
+  is partially applied or no longer matches the pinned checkout. Each patch must
+  now either apply cleanly or already be fully applied; otherwise the build
+  aborts with reset instructions. This prevents a build from silently missing
+  the `node,web,worker` / pure-MEMFS changes.
+
+### Changed
+
+- Corrected the `build-wasm.sh` header: it documents the CGAL + Manifold
+  backends and the `node,web,worker` environment instead of the old
+  Manifold-only probe build.
+
 ## [0.2.0] - 2026-10-20
 
 First release with the public rendering API. The wrapper now covers the full
@@ -75,6 +91,7 @@ compiled with Emscripten 6.0.5, with CGAL and Manifold backends. Exposed
 `isOpenScadWasmAbort()` and `ScadWasmError`; shipped a prebuilt `.wasm`, dual
 ESM/CJS entries and TypeScript types for Node ≥ 18.
 
-[Unreleased]: https://github.com/loumalouomega/openscad-wasm/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/loumalouomega/openscad-wasm/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/loumalouomega/openscad-wasm/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/loumalouomega/openscad-wasm/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/loumalouomega/openscad-wasm/releases/tag/v0.1.0
