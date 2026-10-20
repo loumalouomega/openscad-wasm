@@ -32,9 +32,9 @@ jobs:
         run: |
           # .mjs/.cjs extensions select the module system; --input-type is
           # only valid for string input (--eval/STDIN), not for files.
-          node --check src/openscad.mjs
-          node --check src/openscad.cjs
-          node --check test/smoke.test.mjs
+          for f in src/*.mjs src/*.cjs bin/*.mjs test/*.mjs; do node --check "$f"; done
+      - name: Unit tests (pure JS, no wasm)
+        run: node --test test/unit.test.mjs
       - name: Syntax-check shell scripts
         run: |
           bash -n scripts/build-deps.sh
@@ -89,7 +89,11 @@ jobs:
         run: |
           source "$EMSDK/emsdk_env.sh"
           scripts/build-wasm.sh
-      - name: Stage dist and smoke-test
+      - name: Install Playwright (headless Chromium for the browser test)
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+      - name: Stage dist and run tests
         run: |
           scripts/stage-dist.sh
           ls -la dist/

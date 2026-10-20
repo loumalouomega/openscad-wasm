@@ -4,7 +4,13 @@
 #   -sENVIRONMENT=node,worker -sEXPORT_ES6=1 -sEXPORT_NAME=OpenSCAD -sMODULARIZE=1
 # Manifold-only geometry backend (ENABLE_CGAL=OFF) for the first probe build.
 #
+# One build serves Node AND browsers: OPENSCAD_WASM_MEMFS_ONLY=ON (see the
+# openscad-wasm-memfs patch) selects ENVIRONMENT=node,web,worker with a pure
+# MEMFS root. Upstream forces ENABLE_CAIRO=OFF (no PDF), NULLGL=ON (no PNG) and
+# MANIFOLD_PAR=OFF (no threads) for Emscripten; those are not toggled here.
+#
 # Usage:
+#   OPENSCAD_WASM_OPT=-Oz scripts/build-wasm.sh   # optional size-optimised build
 #   source ~/emsdk-6.0.5/emsdk_env.sh
 #   scripts/build-wasm.sh [build-dir]   # default: build-node-module
 #
@@ -16,6 +22,8 @@ command -v emcc >/dev/null || { echo "emcc not on PATH"; exit 1; }
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BLD="${1:-$ROOT/build-node-module}"
 JOBS="$(nproc)"
+# Optimisation level: -O3 (default, fastest) | -O2 | -Os | -Oz (smaller wasm).
+OPT="${OPENSCAD_WASM_OPT:--O3}"
 
 # Upstream deltas carried as patches (DSchroer-style), applied idempotently:
 # - openscad-emsdk-sysroot.patch: $EMSDK instead of hardcoded docker /emsdk.
@@ -41,8 +49,8 @@ echo "commit: $OPENSCAD_COMMIT  version: $OPENSCAD_VERSION"
 
 emcmake cmake -G Ninja -S "$ROOT/openscad" -B "$BLD" \
   -DCMAKE_BUILD_TYPE=OpenscadWasm \
-  -DCMAKE_C_FLAGS_OPENCADWASM="-O3 -DNDEBUG" \
-  -DCMAKE_CXX_FLAGS_OPENCADWASM="-O3 -DNDEBUG" \
+  -DCMAKE_C_FLAGS_OPENCADWASM="$OPT -DNDEBUG" \
+  -DCMAKE_CXX_FLAGS_OPENCADWASM="$OPT -DNDEBUG" \
   -DCMAKE_EXE_LINKER_FLAGS_OPENCADWASM="" \
   -DWASM_BUILD_TYPE=node-module \
   -DOPENSCAD_WASM_MEMFS_ONLY=ON \

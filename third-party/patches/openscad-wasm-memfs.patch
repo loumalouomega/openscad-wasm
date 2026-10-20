@@ -1,7 +1,15 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 89278f6..9bd0b7b 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -363,7 +363,10 @@ if (CMAKE_SYSTEM_NAME STREQUAL Emscripten)
-       -sENVIRONMENT=node,worker
+@@ -360,11 +360,16 @@ if (CMAKE_SYSTEM_NAME STREQUAL Emscripten)
+     )
+   elseif (WASM_BUILD_TYPE STREQUAL "node-module")
+     target_link_options(OpenSCADExe PUBLIC
+-      -sENVIRONMENT=node,worker
++      # OPENSCAD_WASM_MEMFS_ONLY=ON also targets browsers (node,web,worker);
++      # upstream's node-module build is node,worker only.
++      $<IF:$<BOOL:${OPENSCAD_WASM_MEMFS_ONLY}>,-sENVIRONMENT=node$<COMMA>web$<COMMA>worker,-sENVIRONMENT=node$<COMMA>worker>
        -sEXPORT_ES6=1
        -sEXPORT_NAME=OpenSCAD
        -sMODULARIZE=1

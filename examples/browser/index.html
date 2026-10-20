@@ -1,0 +1,30 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>OpenSCAD-WASM browser demo</title>
+<style>body{font:14px system-ui;margin:2rem;max-width:42rem}textarea{width:100%;height:8rem}pre{background:#eee;padding:.5rem;overflow:auto}</style>
+<h1>OpenSCAD-WASM</h1>
+<textarea id="src">difference() { cube(10, center = true); sphere(6, $fn = 32); }</textarea>
+<p><button id="go">Render</button> <a id="dl" hidden download="model.stl">download STL</a></p>
+<pre id="out">idle</pre>
+<script type="module">
+  // Served from the package root: dist/ holds openscad.mjs, the factory and the wasm.
+  import { render } from "../../dist/openscad.mjs";
+  const out = document.getElementById("out");
+  async function run() {
+    out.textContent = "rendering…";
+    try {
+      const r = await render(document.getElementById("src").value, { format: "stl" });
+      const tris = new DataView(r.output.buffer, r.output.byteOffset).getUint32(80, true);
+      out.textContent = `ok: ${tris} triangles, ${r.output.length} bytes`;
+      const a = document.getElementById("dl");
+      a.href = URL.createObjectURL(new Blob([r.output], { type: "model/stl" }));
+      a.hidden = false;
+      window.__done = { tris };
+    } catch (e) {
+      out.textContent = "error: " + e.message;
+      window.__done = { error: e.message };
+    }
+  }
+  document.getElementById("go").onclick = run;
+  run();
+</script>

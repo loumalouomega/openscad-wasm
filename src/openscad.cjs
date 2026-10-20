@@ -1,11 +1,10 @@
-// CJS entry — async-only surface over the ESM wrapper (same discipline as
-// meshio++/fTetWild: the Emscripten factory is ESM, so this entry lazy-loads
-// it with dynamic import inside each async function; no top-level await).
+// CJS entry — async-only surface over the ESM wrapper (the Emscripten factory
+// is ESM, so every function lazy-loads it with dynamic import; no top-level
+// await). Pure helpers are async here too: `await extractParameters(src)`.
 const _mod = () => import("./openscad.mjs");
+const _worker = () => import("./worker.mjs");
 
-async function initOpenSCAD(options) {
-  return (await _mod()).initOpenSCAD(options);
-}
+const lazy = (name, loader = _mod) => async (...args) => (await loader())[name](...args);
 
 function getWasmBinary(wasmPath) {
   // Synchronous (fs.readFileSync) — safe to expose directly.
@@ -13,14 +12,6 @@ function getWasmBinary(wasmPath) {
   const path = require("node:path");
   if (wasmPath) return fs.readFileSync(wasmPath);
   return fs.readFileSync(path.join(__dirname, "openscad-core.wasm"));
-}
-
-async function evaluateScad(instance, opts) {
-  return (await _mod()).evaluateScad(instance, opts);
-}
-
-async function renderToCsg(scadText, options) {
-  return (await _mod()).renderToCsg(scadText, options);
 }
 
 function isOpenScadWasmAbort(message) {
@@ -32,20 +23,51 @@ function isOpenScadWasmAbort(message) {
   );
 }
 
+// Errors thrown by the ESM wrapper are ESM classes; match them by name so
+// `instanceof` works for CJS consumers too.
 class ScadWasmError extends Error {
-  constructor(message, { rc, stderr } = {}) {
+  static [Symbol.hasInstance](v) {
+    return v instanceof Error && v.name === "ScadWasmError";
+  }
+  constructor(message, { rc, stderr, diagnostics } = {}) {
     super(message);
     this.name = "ScadWasmError";
     this.rc = rc;
     this.stderr = stderr ?? [];
+    this.diagnostics = diagnostics;
+  }
+}
+
+class ScadTimeoutError extends Error {
+  static [Symbol.hasInstance](v) {
+    return v instanceof Error && v.name === "ScadTimeoutError";
+  }
+  constructor(timeoutMs) {
+    super(`OpenSCAD render exceeded ${timeoutMs} ms`);
+    this.name = "ScadTimeoutError";
+    this.timeoutMs = timeoutMs;
   }
 }
 
 module.exports = {
-  initOpenSCAD,
+  initOpenSCAD: lazy("initOpenSCAD"),
+  loadWasmBinary: lazy("loadWasmBinary"),
+  evaluateScad: lazy("evaluateScad"),
+  render: lazy("render"),
+  renderToCsg: lazy("renderToCsg"),
+  renderToStl: lazy("renderToStl"),
+  renderToMesh: lazy("renderToMesh"),
+  renderInWorker: lazy("renderInWorker", _worker),
+  createRenderer: async (opts) => (await _mod()).createRenderer(opts),
+  mountFiles: lazy("mountFiles"),
+  mountLibrary: lazy("mountLibrary"),
+  extractParameters: lazy("extractParameters"),
+  findIncludes: lazy("findIncludes"),
+  parseDiagnostics: lazy("parseDiagnostics"),
+  parseBinaryStl: lazy("parseBinaryStl"),
+  stlToMesh: lazy("stlToMesh"),
   getWasmBinary,
-  evaluateScad,
-  renderToCsg,
   isOpenScadWasmAbort,
   ScadWasmError,
+  ScadTimeoutError,
 };
