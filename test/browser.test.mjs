@@ -2,13 +2,9 @@
 // (CI installs it; skipped locally when either is missing).
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { createServer } from "node:http";
-import { existsSync, readFileSync } from "node:fs";
-import { dirname, extname, join, normalize } from "node:path";
-import { fileURLToPath } from "node:url";
-
-const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
-const MIME = { ".html": "text/html", ".mjs": "text/javascript", ".js": "text/javascript", ".wasm": "application/wasm" };
+import { existsSync } from "node:fs";
+import { join } from "node:path";
+import { ROOT, serve } from "./helpers/static-server.mjs";
 
 let chromium;
 try {
@@ -19,11 +15,7 @@ try {
 const skip = !chromium ? "playwright not installed" : !existsSync(join(ROOT, "dist", "openscad.mjs")) ? "dist/ not built" : false;
 
 test("browser: render a model to STL", { skip }, async () => {
-  const server = createServer((req, res) => {
-    const p = normalize(join(ROOT, decodeURIComponent(new URL(req.url, "http://x").pathname)));
-    if (!p.startsWith(ROOT) || !existsSync(p)) return res.writeHead(404).end();
-    res.writeHead(200, { "content-type": MIME[extname(p)] ?? "application/octet-stream" }).end(readFileSync(p));
-  }).listen(0);
+  const server = serve(0);
   const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || undefined });
   try {
     const page = await browser.newPage();

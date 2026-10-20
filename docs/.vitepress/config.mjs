@@ -32,6 +32,7 @@ export default defineConfig({
         { text: 'Workers & timeouts', link: '/guide/worker' },
         { text: 'Browser', link: '/guide/browser' },
         { text: 'Command line', link: '/guide/cli' },
+        { text: 'Examples', link: '/guide/examples' },
         { text: 'Errors & aborts', link: '/guide/errors' },
         { text: 'TypeScript', link: '/guide/typescript' },
       ] },

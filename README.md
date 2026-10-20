@@ -120,7 +120,7 @@ third-party/         patches/ + dependency sources/builds (gitignored)
 scripts/             build-deps.sh, build-wasm.sh, stage-dist.sh
 src/                 hand-written wrapper: openscad.{mjs,cjs,d.ts}, core.mjs, worker*.mjs, cli.mjs
 bin/                 openscad-wasm CLI
-examples/            node/ and browser/ demos
+examples/            node/ and browser/ demos (see examples/README.md)
 test/                unit, smoke, feature and browser tests + fixtures
 docs/                VitePress documentation site
 probe-results/       dated build/probe logs
@@ -152,6 +152,8 @@ CGAL/gmp/mpfr (Manifold-only). See `THIRD_PARTY_NOTICES.md` for the full list.
 | `npm test` | unit + smoke + feature + browser tests (wasm tests need `dist/`) |
 | `npm run test:browser` | headless-Chromium test (needs Playwright + `dist/`) |
 | `npm run docs:dev` | live-preview the docs |
+| `npm run docs:check` | fail if `docs/api/reference.md` and `src/openscad.d.ts` disagree |
+| `npm run example:browser` | serve the browser example on :8080 |
 | `npm run docs:build` | build the docs site |
 
 ## Known issues

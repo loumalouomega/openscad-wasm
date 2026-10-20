@@ -20,6 +20,8 @@ const bytes = r.output as Uint8Array; // binary formats return bytes, text forma
 const params: ScadParameter[] = extractParameters(source);
 ```
 
+CommonJS consumers get `dist/openscad.cjs.d.ts`, where every function (including pure helpers such as `extractParameters`) returns a `Promise`.
+
 `renderInWorker` types are exported from the same file and available at `@loumalouomega/openscad-wasm/worker`.
 
 See the [API reference](/api/reference) for every exported type.

@@ -2,14 +2,14 @@
 
 ## One-shot
 
-```js
+```js check
 import { renderToCsg } from '@loumalouomega/openscad-wasm';
 const csg = await renderToCsg('sphere(5);');
 ```
 
 ## Low level
 
-```js
+```js check
 import { initOpenSCAD, evaluateScad } from '@loumalouomega/openscad-wasm';
 
 const stderr = [];
@@ -30,7 +30,7 @@ Use the high-level [`render()`](/guide/formats). With `evaluateScad()` pass `bin
 
 ## Custom wasm location
 
-```js
+```js check
 import { initOpenSCAD, getWasmBinary } from '@loumalouomega/openscad-wasm';
 
 await initOpenSCAD({ wasmPath: '/opt/openscad-core.wasm' }); // Node

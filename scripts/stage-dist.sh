@@ -17,6 +17,6 @@ done
 mkdir -p "$DIST"
 cp "$BLD/openscad.js" "$DIST/openscad-factory.mjs"
 cp "$BLD/openscad.wasm" "$DIST/openscad-core.wasm"
-cp "$ROOT"/src/openscad.mjs "$ROOT"/src/openscad.cjs "$ROOT"/src/openscad.d.ts \
+cp "$ROOT"/src/openscad.mjs "$ROOT"/src/openscad.cjs "$ROOT"/src/openscad.d.ts "$ROOT"/src/openscad.cjs.d.ts \
    "$ROOT"/src/core.mjs "$ROOT"/src/cli.mjs "$ROOT"/src/worker.mjs "$ROOT"/src/worker-entry.mjs "$DIST/"
 ls -la "$DIST/"

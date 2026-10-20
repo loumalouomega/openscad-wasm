@@ -15,9 +15,14 @@
   "types": "./dist/openscad.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/openscad.d.ts",
-      "import": "./dist/openscad.mjs",
-      "require": "./dist/openscad.cjs"
+      "import": {
+        "types": "./dist/openscad.d.ts",
+        "default": "./dist/openscad.mjs"
+      },
+      "require": {
+        "types": "./dist/openscad.cjs.d.ts",
+        "default": "./dist/openscad.cjs"
+      }
     },
     "./openscad-core.wasm": "./dist/openscad-core.wasm",
     "./worker": {
@@ -37,12 +42,14 @@
     "build:deps": "scripts/build-deps.sh",
     "build:wasm": "scripts/build-wasm.sh",
     "build": "npm run build:wasm",
-    "test": "node --test test/unit.test.mjs test/smoke.test.mjs test/features.test.mjs test/browser.test.mjs",
+    "test": "node --test test/unit.test.mjs test/docs.test.mjs test/smoke.test.mjs test/features.test.mjs test/browser.test.mjs",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
-    "test:unit": "node --test test/unit.test.mjs",
-    "test:browser": "node --test test/browser.test.mjs"
+    "test:unit": "node --test test/unit.test.mjs test/docs.test.mjs",
+    "test:browser": "node --test test/browser.test.mjs",
+    "example:browser": "node test/helpers/static-server.mjs",
+    "docs:check": "node scripts/check-docs-api.mjs"
   },
   "engines": {
     "node": ">=18"

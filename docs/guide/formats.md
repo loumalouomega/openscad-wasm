@@ -18,7 +18,7 @@
 Upstream's Emscripten configuration forces `NULLGL=ON` (no OpenGL, so no image rendering) and `ENABLE_CAIRO=OFF` (no PDF). Requesting them throws a `TypeError`. Render to SVG or a mesh and rasterise on your side.
 :::
 
-```js
+```js check
 import { render, renderToStl, renderToMesh } from '@loumalouomega/openscad-wasm';
 
 const { output } = await render('cube(10);', { format: 'obj' });
@@ -30,7 +30,7 @@ const { positions, indices } = await renderToMesh('cube(10);'); // for three.js
 
 ## Diagnostics and statistics
 
-```js
+```js check
 const r = await render('echo("hi"); cube(1);', { summary: true });
 r.diagnostics.echo;   // ['"hi"']
 r.diagnostics.warnings;
@@ -41,12 +41,16 @@ Failures throw `ScadWasmError` carrying `rc`, `stderr` and the same `diagnostics
 
 ## Backend, defines and experimental features
 
-```js
+```js check
 await render(src, {
   backend: 'cgal',                  // 'manifold' (default) | 'cgal'
   defines: { width: 60, name: 'box' }, // -D; strings that aren't literals are quoted
   enable: ['lazy-union'],            // --enable=… (build has EXPERIMENTAL=ON)
-  exportOptions: { 'export-3mf/color-mode': 'model' }, // -O
+  exportOptions: { 'export-3mf/decimal-precision': 6 }, // -O section/key=value
   hardwarnings: true,
 });
 ```
+
+Experimental features present in the pinned OpenSCAD snapshot: `roof`, `lazy-union` and `import-function`. Export settings use the `-O section/key=value` form, for example `export-3mf/color-mode` and `export-3mf/decimal-precision`; `--help-export` in a native OpenSCAD lists them all.
+
+`summary` accepts `true` (everything) or a list of `cache`, `time`, `camera`, `geometry`, `bounding-box`, `area`.

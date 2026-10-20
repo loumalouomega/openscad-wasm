@@ -13,9 +13,9 @@ Renders to any [format](/guide/formats) on a fresh instance (or `options.instanc
 | `format` | `Format` | `'csg'` | output format |
 | `backend` | `'manifold' \| 'cgal'` | `'manifold'` | `--backend` |
 | `defines` | `Record<string, string \| number \| boolean \| any[]>` | `{}` | `-D` overrides |
-| `enable` | `string[]` | `[]` | `--enable=` experimental features |
+| `enable` | `string[]` | `[]` | `--enable=` experimental features (`roof`, `lazy-union`, `import-function`) |
 | `parameters`, `parameterSet` | `object`, `string` | | Customizer JSON and set name |
-| `summary` | `boolean \| string[]` | | collect `--summary` statistics |
+| `summary` | `boolean \| string[]` | | collect `--summary` statistics: `true`, or any of `cache`, `time`, `camera`, `geometry`, `bounding-box`, `area` |
 | `exportOptions` | `Record<string, …>` | | `-O section/key=value` |
 | `colorscheme`, `hardwarnings`, `quiet` | | | passed through |
 | `args` | `string[]` | | extra raw argv |

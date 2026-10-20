@@ -2,7 +2,7 @@
 
 The wasm is single-threaded and cannot be interrupted from inside, so a runaway model blocks its thread. `renderInWorker` runs the render in a `worker_thread` (Node) or module `Worker` (browser) and terminates it on timeout:
 
-```js
+```js check
 import { renderInWorker, ScadTimeoutError } from '@loumalouomega/openscad-wasm/worker';
 
 try {

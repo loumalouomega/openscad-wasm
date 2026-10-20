@@ -4,7 +4,7 @@
 
 `renderToCsg()` throws `ScadWasmError` when OpenSCAD exits non-zero or the module aborts:
 
-```js
+```js check
 import { renderToCsg, ScadWasmError } from '@loumalouomega/openscad-wasm';
 
 try {

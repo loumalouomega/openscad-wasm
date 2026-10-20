@@ -10,7 +10,7 @@ The package ships a prebuilt `openscad-core.wasm`, ESM/CJS entries and TypeScrip
 
 ## Render a model
 
-```js
+```js check
 import { renderToCsg } from '@loumalouomega/openscad-wasm';
 
 const csg = await renderToCsg('cube(10);');
@@ -18,13 +18,13 @@ const csg = await renderToCsg('cube(10);');
 
 CommonJS works the same way — every entry is async (including pure helpers such as `extractParameters`):
 
-```js
+```js check
 const { renderToCsg } = require('@loumalouomega/openscad-wasm');
 ```
 
 ## Customizer parameters (`-D`)
 
-```js
+```js check
 const csg = await renderToCsg(source, {
   defines: { width: 60 },
   backend: 'manifold',
@@ -35,7 +35,7 @@ const csg = await renderToCsg(source, {
 
 `include <...>` / `use <...>` resolve against the MEMFS root, so stage extra files with `extraFiles`:
 
-```js
+```js check
 const csg = await renderToCsg('include <lib.scad>\nbox(8);', {
   extraFiles: { '/lib.scad': 'module box(s){cube(s,center=true);}' },
 });

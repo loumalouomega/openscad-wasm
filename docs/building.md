@@ -47,4 +47,6 @@ The build always sets `OPENSCAD_WASM_MEMFS_ONLY=ON` (pure MEMFS root, `ENVIRONME
 
 ## CI
 
-`.github/workflows/ci.yml` runs fast syntax/patch checks, then the full build + smoke test, and publishes to npm on `v*` tags. The dependency build is cached by the hash of `scripts/build-deps.sh`.
+`.github/workflows/ci.yml` runs fast checks (syntax, unit and docs-snippet tests, docs/API drift check, patch applicability), then the full build + tests, and publishes to npm on `v*` tags. A newer push to the same ref cancels the older run; tag builds are never cancelled.
+
+**Dependency cache.** The dependency stages (`third-party/src`, `third-party/build`, the emsdk sysroot) are restored with `actions/cache/restore` using a key made of the hash of `scripts/build-deps.sh` and the lib3mf patch plus the run id, falling back to the newest cache with the same hash prefix. They are saved with `actions/cache/save` under `if: always()`, so a failure in a later step (for example the OpenSCAD link) still keeps the finished dependency stages. `build-deps.sh` stamps each stage with `.done-*` and resumes from there. Changing `build-deps.sh` changes the hash prefix and starts clean.

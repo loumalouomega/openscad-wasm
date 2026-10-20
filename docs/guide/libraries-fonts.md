@@ -4,7 +4,7 @@
 
 Stage any file with `extraFiles` (directories are created for you):
 
-```js
+```js check
 await render('include <sub/a.scad>; a();', {
   extraFiles: { '/sub/a.scad': 'module a(){cube(5);}' },
 });
@@ -14,7 +14,7 @@ await render('include <sub/a.scad>; a();', {
 
 `libraries` files are mounted under `/libraries`, which is exported to OpenSCAD as `OPENSCADPATH`, so `use <mylib/box.scad>` just works:
 
-```js
+```js check
 await render('use <mylib/box.scad>; box(4);', {
   libraries: { 'mylib/box.scad': 'module box(s){cube(s);}' },
 });
@@ -26,7 +26,7 @@ For an existing instance use `mountLibrary(instance, files)` / `mountFiles(insta
 
 The build ships no fonts. Provide font files and the wrapper writes a `fonts.conf` and points fontconfig at `/fonts`:
 
-```js
+```js check
 import { readFileSync } from 'node:fs';
 await render('text("Hello", size = 8);', {
   format: 'stl',

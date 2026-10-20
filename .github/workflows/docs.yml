@@ -29,6 +29,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npm run docs:check
+      - run: npm run test:unit
       - run: npm run docs:build
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4

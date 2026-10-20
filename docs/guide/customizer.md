@@ -4,7 +4,7 @@
 
 `extractParameters(source)` is pure JavaScript (no wasm needed) and reads the Customizer annotations OpenSCAD's GUI uses:
 
-```js
+```js check
 import { extractParameters } from '@loumalouomega/openscad-wasm';
 
 extractParameters(`
@@ -23,7 +23,7 @@ It is a heuristic reader of top-level assignments before the first `module`/`fun
 
 Either override with `defines`, or use an OpenSCAD parameter-set file:
 
-```js
+```js check
 await render(src, {
   parameters: { fileFormatVersion: '1', parameterSets: { big: { width: '50' } } },
   parameterSet: 'big',

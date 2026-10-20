@@ -31,7 +31,7 @@ features:
 
 ## Quick example
 
-```js
+```js check
 import { renderToCsg } from '@loumalouomega/openscad-wasm';
 
 const csg = await renderToCsg('cube(10);');

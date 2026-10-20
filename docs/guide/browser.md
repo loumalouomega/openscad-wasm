@@ -2,7 +2,7 @@
 
 One build serves Node **and** browsers (`-sENVIRONMENT=node,web,worker`, pure MEMFS). The wrapper uses `fetch` to load `openscad-core.wasm` outside Node.
 
-```js
+```js check
 import { render } from '@loumalouomega/openscad-wasm';
 
 const { output } = await render('cube(10);', { format: 'stl' });
