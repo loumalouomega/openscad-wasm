@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #
 # Configure + build OpenSCAD for Node as an ES module (WASM_BUILD_TYPE=node-module):
-#   -sENVIRONMENT=node,worker -sEXPORT_ES6=1 -sEXPORT_NAME=OpenSCAD -sMODULARIZE=1
-# Manifold-only geometry backend (ENABLE_CGAL=OFF) for the first probe build.
+#   -sENVIRONMENT=node,web,worker -sEXPORT_ES6=1 -sEXPORT_NAME=OpenSCAD -sMODULARIZE=1
+# CGAL + Manifold geometry backends (Manifold is the default runtime --backend).
 #
 # One build serves Node AND browsers: OPENSCAD_WASM_MEMFS_ONLY=ON (see the
 # openscad-wasm-memfs patch) selects ENVIRONMENT=node,web,worker with a pure
@@ -25,18 +25,25 @@ JOBS="$(nproc)"
 # Optimisation level: -O3 (default, fastest) | -O2 | -Os | -Oz (smaller wasm).
 OPT="${OPENSCAD_WASM_OPT:--O3}"
 
-# Upstream deltas carried as patches (DSchroer-style), applied idempotently:
+# Upstream deltas carried as patches (DSchroer-style). Each patch is applied
+# at most once; a partially applied patch (or one that no longer matches the
+# pinned submodule) is a hard error, since continuing would silently build with
+# the wrong ENVIRONMENT/filesystem settings.
 # - openscad-emsdk-sysroot.patch: $EMSDK instead of hardcoded docker /emsdk.
 # - openscad-wasm-memfs.patch: OPENSCAD_WASM_MEMFS_ONLY knob to drop
 #   -sNODERAWFS (pure-MEMFS root for bytes-in/bytes-out API use).
 for patch in openscad-emsdk-sysroot.patch openscad-wasm-memfs.patch; do
-  if git -C "$ROOT/openscad" apply --check "$ROOT/third-party/patches/$patch" >/dev/null 2>&1; then
-    git -C "$ROOT/openscad" apply "$ROOT/third-party/patches/$patch"
+  patch_file="$ROOT/third-party/patches/$patch"
+  if git -C "$ROOT/openscad" apply --check "$patch_file" >/dev/null 2>&1; then
+    git -C "$ROOT/openscad" apply "$patch_file"
     echo "applied $patch"
-  elif git -C "$ROOT/openscad" diff --quiet -- CMakeLists.txt; then
+  elif git -C "$ROOT/openscad" apply --reverse --check "$patch_file" >/dev/null 2>&1; then
     echo "$patch already applied"
   else
-    echo "WARNING: openscad/CMakeLists.txt has local modifications; not applying $patch"
+    echo "ERROR: $patch neither applies cleanly nor is already applied" >&2
+    echo "       (partial patch or conflicting local changes in openscad/CMakeLists.txt)" >&2
+    echo "       reset it with: git -C \"$ROOT/openscad\" checkout -- CMakeLists.txt" >&2
+    exit 1
   fi
 done
 
