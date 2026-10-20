@@ -218,6 +218,10 @@ export async function initOpenSCAD(options = {}) {
 export async function evaluateScad(instance, { files = {}, args = [], outPath, binary = false }) {
   const lines = instance.__lines;
   const start = lines ? lines.length : 0;
+  // Emscripten's quit_ sets process.exitCode before throwing. A failed render
+  // is reported as ScadWasmError, so it must not leave the host process with a
+  // nonzero exit code (a long-lived server would later exit with status 1).
+  const exitCode = IS_NODE ? process.exitCode : undefined;
   try {
     for (const [p, c] of Object.entries(files)) {
       mkdirp(instance.FS, dirname(p));
@@ -235,6 +239,7 @@ export async function evaluateScad(instance, { files = {}, args = [], outPath, b
     }
     return { rc, output, stderr: lines ? lines.slice(start) : [] };
   } finally {
+    if (IS_NODE) process.exitCode = exitCode;
     for (const p of [...Object.keys(files), outPath].filter(Boolean)) {
       try {
         instance.FS.unlink(p);

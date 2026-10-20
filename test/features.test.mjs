@@ -54,6 +54,13 @@ t("syntax errors throw ScadWasmError with diagnostics", async () => {
   await assert.rejects(render("cube(", {}), (e) => e instanceof ScadWasmError && e.stderr.length > 0);
 });
 
+t("failed renders leave process.exitCode unchanged", async () => {
+  const { render } = await load();
+  const before = process.exitCode;
+  await assert.rejects(render("cube(", {}));
+  assert.equal(process.exitCode, before);
+});
+
 t("summary statistics are returned", async () => {
   const { render } = await load();
   const r = await render("cube(10);", { format: "stl", summary: true });
