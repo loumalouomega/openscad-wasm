@@ -4,7 +4,7 @@
   "description": "OpenSCAD (Manifold backend) compiled to WebAssembly for Node — evaluate .scad to .csg/.stl with no openscad binary on PATH",
   "license": "GPL-3.0-or-later",
   "author": "Vicente Mataix Ferrándiz",
-  "homepage": "https://github.com/loumalouomega/openscad-wasm",
+  "homepage": "https://loumalouomega.github.io/openscad-wasm/",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/loumalouomega/openscad-wasm.git"
@@ -15,14 +15,24 @@
   "types": "./dist/openscad.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/openscad.d.ts",
-      "import": "./dist/openscad.mjs",
-      "require": "./dist/openscad.cjs"
+      "import": {
+        "types": "./dist/openscad.d.ts",
+        "default": "./dist/openscad.mjs"
+      },
+      "require": {
+        "types": "./dist/openscad.cjs.d.ts",
+        "default": "./dist/openscad.cjs"
+      }
     },
-    "./openscad-core.wasm": "./dist/openscad-core.wasm"
+    "./openscad-core.wasm": "./dist/openscad-core.wasm",
+    "./worker": {
+      "types": "./dist/openscad.d.ts",
+      "default": "./dist/worker.mjs"
+    }
   },
   "files": [
     "dist/",
+    "bin/",
     "LICENSE",
     "NOTICE",
     "THIRD_PARTY_NOTICES.md",
@@ -32,9 +42,34 @@
     "build:deps": "scripts/build-deps.sh",
     "build:wasm": "scripts/build-wasm.sh",
     "build": "npm run build:wasm",
-    "test": "node --test test/smoke.test.mjs"
+    "test": "node --test test/unit.test.mjs test/docs.test.mjs test/smoke.test.mjs test/features.test.mjs test/browser.test.mjs",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs",
+    "test:unit": "node --test test/unit.test.mjs test/docs.test.mjs",
+    "test:browser": "node --test test/browser.test.mjs",
+    "example:browser": "node test/helpers/static-server.mjs",
+    "docs:check": "node scripts/check-docs-api.mjs"
   },
   "engines": {
     "node": ">=18"
-  }
+  },
+  "devDependencies": {
+    "vitepress": "^1.6.4"
+  },
+  "bin": {
+    "openscad-wasm": "./bin/openscad-wasm.mjs"
+  },
+  "keywords": [
+    "openscad",
+    "wasm",
+    "webassembly",
+    "cad",
+    "csg",
+    "stl",
+    "3d",
+    "manifold",
+    "cgal",
+    "scad"
+  ]
 }

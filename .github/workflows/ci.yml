@@ -4,10 +4,23 @@ on:
   push:
     branches: [master]
     tags: ["v*"]
+    paths-ignore:
+      - "docs/**"
+      - "*.md"
   pull_request:
+    paths-ignore:
+      - "docs/**"
+      - "*.md"
+  workflow_dispatch:
 
 permissions:
   contents: read
+
+# A newer push to the same ref supersedes the older run (the full build is hours
+# long). Tag builds are never cancelled so a release always completes.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
 
 jobs:
   quick:
@@ -15,17 +28,21 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: recursive
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
       - name: Syntax-check wrapper entries
         run: |
-          node --check src/openscad.mjs
-          node --input-type=module --check src/openscad.mjs
-          node --check test/smoke.test.mjs
+          # .mjs/.cjs extensions select the module system; --input-type is
+          # only valid for string input (--eval/STDIN), not for files.
+          for f in src/*.mjs src/*.cjs bin/*.mjs test/*.mjs; do node --check "$f"; done
+      - name: Unit + docs-snippet tests (pure JS, no wasm)
+        run: npm run test:unit
+      - name: Docs match the public API
+        run: npm run docs:check
       - name: Syntax-check shell scripts
         run: |
           bash -n scripts/build-deps.sh
@@ -44,19 +61,19 @@ jobs:
     env:
       EMSDK: ${{ github.workspace }}/emsdk-6.0.5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: recursive
       - name: Install host build tools
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            autoconf automake autopoint bison build-essential ccache flex \
-            gettext git gperf libtool ninja-build pkg-config python3-pip \
+            autoconf autoconf-archive automake autopoint bison build-essential \
+            ccache flex gettext git gperf libltdl-dev libtool ninja-build pkg-config python3-pip \
             texinfo unzip wget
           pip install --user --break-system-packages meson
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
       - name: Install Emscripten 6.0.5
@@ -64,21 +81,46 @@ jobs:
           git clone --depth 1 --branch 6.0.5 https://github.com/emscripten-core/emsdk.git "$EMSDK"
           "$EMSDK/emsdk" install 6.0.5
           "$EMSDK/emsdk" activate 6.0.5
+      - name: Restore dependency build cache
+        id: deps-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            third-party/src
+            third-party/build
+            emsdk-6.0.5/upstream/emscripten/cache/sysroot
+          key: deps-${{ runner.os }}-${{ hashFiles('scripts/build-deps.sh', 'third-party/patches/lib3mf.patch') }}-${{ github.run_id }}
+          restore-keys: deps-${{ runner.os }}-${{ hashFiles('scripts/build-deps.sh', 'third-party/patches/lib3mf.patch') }}-
       - name: Build dependencies
         run: |
           source "$EMSDK/emsdk_env.sh"
           scripts/build-deps.sh
+      # Save even when a later step fails, so a retry resumes from the stamped
+      # .done-* stages instead of rebuilding every dependency.
+      - name: Save dependency build cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            third-party/src
+            third-party/build
+            emsdk-6.0.5/upstream/emscripten/cache/sysroot
+          key: deps-${{ runner.os }}-${{ hashFiles('scripts/build-deps.sh', 'third-party/patches/lib3mf.patch') }}-${{ github.run_id }}
       - name: Build OpenSCAD WASM
         run: |
           source "$EMSDK/emsdk_env.sh"
           scripts/build-wasm.sh
-      - name: Stage dist and smoke-test
+      - name: Install Playwright (headless Chromium for the browser test)
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+      - name: Stage dist and run tests
         run: |
           scripts/stage-dist.sh
           ls -la dist/
           npm test
       - name: Upload dist artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: openscad-wasm-dist
           path: dist/
@@ -92,14 +134,14 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: false
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           name: openscad-wasm-dist
           path: dist/
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           registry-url: https://registry.npmjs.org

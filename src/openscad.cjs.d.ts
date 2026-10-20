@@ -1,0 +1,24 @@
+// CommonJS typings: every function returns a Promise (the entry lazy-loads the ESM wrapper).
+import type * as E from "./openscad.js";
+export type * from "./openscad.js";
+type Async<F extends (...a: any[]) => any> = (...a: Parameters<F>) => Promise<Awaited<ReturnType<F>>>;
+export declare const initOpenSCAD: Async<typeof E.initOpenSCAD>;
+export declare const loadWasmBinary: Async<typeof E.loadWasmBinary>;
+export declare const evaluateScad: Async<typeof E.evaluateScad>;
+export declare const render: Async<typeof E.render>;
+export declare const renderToCsg: Async<typeof E.renderToCsg>;
+export declare const renderToStl: Async<typeof E.renderToStl>;
+export declare const renderToMesh: Async<typeof E.renderToMesh>;
+export declare const mountFiles: Async<typeof E.mountFiles>;
+export declare const mountLibrary: Async<typeof E.mountLibrary>;
+export declare const extractParameters: Async<typeof E.extractParameters>;
+export declare const findIncludes: Async<typeof E.findIncludes>;
+export declare const parseDiagnostics: Async<typeof E.parseDiagnostics>;
+export declare const parseBinaryStl: Async<typeof E.parseBinaryStl>;
+export declare const stlToMesh: Async<typeof E.stlToMesh>;
+export declare const createRenderer: Async<typeof E.createRenderer>;
+export declare const renderInWorker: Async<typeof E.renderInWorker>;
+export declare const getWasmBinary: typeof E.getWasmBinary;
+export declare const isOpenScadWasmAbort: typeof E.isOpenScadWasmAbort;
+export declare const ScadWasmError: typeof E.ScadWasmError;
+export declare const ScadTimeoutError: typeof E.ScadTimeoutError;
