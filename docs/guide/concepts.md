@@ -20,4 +20,8 @@ The build links CGAL **and** Manifold. A Manifold-only build is not viable at th
 
 ## Single-threaded
 
-No pthreads and no workers. The package is intentionally `{ threads: false }`.
+Upstream's Emscripten configuration forces `MANIFOLD_PAR=OFF`, so the build has no pthreads and no `SharedArrayBuffer` requirement (no COOP/COEP headers needed). Use [`renderInWorker`](/guide/worker) for parallelism and timeouts.
+
+## Node and browser
+
+A single build (`ENVIRONMENT=node,web,worker`) runs everywhere. See [Browser usage](/guide/browser).

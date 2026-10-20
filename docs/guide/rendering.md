@@ -15,25 +15,26 @@ import { initOpenSCAD, evaluateScad } from '@loumalouomega/openscad-wasm';
 const stderr = [];
 const instance = await initOpenSCAD({ collect: stderr });
 
-const { rc, output } = await evaluateScad(instance, {
+const { rc, output, stderr: log } = await evaluateScad(instance, {
   files: { '/in.scad': 'cube(10);' },
   args: ['--backend=manifold', '/in.scad', '-o', '/o.csg'],
   outPath: '/o.csg',
 });
 ```
 
-`evaluateScad()` stages `files` into MEMFS, calls `callMain(args)`, reads `outPath` back as UTF-8 and removes everything it staged.
+`evaluateScad()` stages `files` into MEMFS (creating directories), calls `callMain(args)`, reads `outPath` back (UTF-8, or bytes with `binary: true`) and removes everything it staged. `stderr` holds the log lines emitted during that call.
 
 ## Other output formats
 
-`-o` selects the exporter by extension (e.g. `/o.stl`). `evaluateScad()` reads `outPath` as UTF-8 text, which suits `.csg` and ASCII `.stl`. For binary formats, omit `outPath`, call `instance.FS.readFile(path)` yourself after it returns, and unlink the file afterwards.
+Use the high-level [`render()`](/guide/formats). With `evaluateScad()` pass `binary: true` to read `outPath` as a `Uint8Array`; `-o` selects the exporter by extension and `--export-format=binstl` forces binary STL.
 
 ## Custom wasm location
 
 ```js
 import { initOpenSCAD, getWasmBinary } from '@loumalouomega/openscad-wasm';
 
-await initOpenSCAD({ wasmPath: '/opt/openscad-core.wasm' });
+await initOpenSCAD({ wasmPath: '/opt/openscad-core.wasm' }); // Node
+await initOpenSCAD({ wasmUrl: '/assets/openscad-core.wasm' }); // browser
 // or inject bytes you fetched yourself
 await initOpenSCAD({ wasmBinary: getWasmBinary() });
 ```

@@ -26,6 +26,12 @@ export default defineConfig({
       { text: 'Guide', items: [
         { text: 'Concepts', link: '/guide/concepts' },
         { text: 'Rendering', link: '/guide/rendering' },
+        { text: 'Output formats', link: '/guide/formats' },
+        { text: 'Libraries & fonts', link: '/guide/libraries-fonts' },
+        { text: 'Customizer', link: '/guide/customizer' },
+        { text: 'Workers & timeouts', link: '/guide/worker' },
+        { text: 'Browser', link: '/guide/browser' },
+        { text: 'Command line', link: '/guide/cli' },
         { text: 'Errors & aborts', link: '/guide/errors' },
         { text: 'TypeScript', link: '/guide/typescript' },
       ] },

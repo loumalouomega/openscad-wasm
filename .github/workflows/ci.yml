@@ -73,18 +73,31 @@ jobs:
           git clone --depth 1 --branch 6.0.5 https://github.com/emscripten-core/emsdk.git "$EMSDK"
           "$EMSDK/emsdk" install 6.0.5
           "$EMSDK/emsdk" activate 6.0.5
-      - name: Cache dependency build
-        uses: actions/cache@v4
+      - name: Restore dependency build cache
+        id: deps-cache
+        uses: actions/cache/restore@v4
         with:
           path: |
             third-party/src
             third-party/build
             emsdk-6.0.5/upstream/emscripten/cache/sysroot
-          key: deps-${{ runner.os }}-${{ hashFiles('scripts/build-deps.sh', 'third-party/patches/lib3mf.patch') }}
+          key: deps-${{ runner.os }}-${{ hashFiles('scripts/build-deps.sh', 'third-party/patches/lib3mf.patch') }}-${{ github.run_id }}
+          restore-keys: deps-${{ runner.os }}-${{ hashFiles('scripts/build-deps.sh', 'third-party/patches/lib3mf.patch') }}-
       - name: Build dependencies
         run: |
           source "$EMSDK/emsdk_env.sh"
           scripts/build-deps.sh
+      # Save even when a later step fails, so a retry resumes from the stamped
+      # .done-* stages instead of rebuilding every dependency.
+      - name: Save dependency build cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            third-party/src
+            third-party/build
+            emsdk-6.0.5/upstream/emscripten/cache/sysroot
+          key: deps-${{ runner.os }}-${{ hashFiles('scripts/build-deps.sh', 'third-party/patches/lib3mf.patch') }}-${{ github.run_id }}
       - name: Build OpenSCAD WASM
         run: |
           source "$EMSDK/emsdk_env.sh"

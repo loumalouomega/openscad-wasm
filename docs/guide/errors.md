@@ -20,6 +20,9 @@ try {
 | --- | --- |
 | `rc` | OpenSCAD exit status (absent for aborts) |
 | `stderr` | Captured output lines |
+| `diagnostics` | `{ warnings, errors, echo, deprecations, other }` parsed from `stderr` |
+
+`ScadTimeoutError` is thrown by [`renderInWorker`](/guide/worker) when `timeoutMs` elapses.
 
 ## Abort classification
 

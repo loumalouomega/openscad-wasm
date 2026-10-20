@@ -12,10 +12,14 @@
 [OpenSCAD](https://openscad.org) — the programmer's solid 3D CAD modeller — compiled to **WebAssembly** for Node. Evaluate `.scad` to `.csg`/`.stl` with **no `openscad` binary on `PATH`**.
 
 - ⚡ **Zero install** — the prebuilt `.wasm` ships in the package; Node ≥ 18, no toolchain
-- 🧩 **Small async API** — one-shot `renderToCsg()` or low-level `initOpenSCAD()` + `evaluateScad()`; TypeScript types included
-- 🔧 **CGAL + Manifold** backends, Manifold by default at runtime
-- 📦 Dual **ESM + CJS** entry points, no top-level await; logging goes to stderr so stdout stays clean for MCP JSON-RPC
-- 🧵 Single-threaded by design (no pthreads, no workers)
+- 📤 **Many formats** — STL (binary/ASCII), OBJ, OFF, WRL, 3MF, DXF, SVG, POV, CSG, plus `echo`/`ast`; binary-safe output
+- 🧊 **Mesh output** — `renderToMesh()` gives an indexed `Float32Array`/`Uint32Array` mesh for three.js
+- 🎛️ **Customizer** — `extractParameters()`, parameter sets, `-D` defines, experimental `--enable` features
+- 🔤 **Libraries & fonts** — mount MCAD/user libraries and fonts so `use <…>` and `text()` work
+- 🧵 **Workers & timeouts** — `renderInWorker()` enforces a hard time limit
+- 🌐 **Node and browser** — one build, ESM + CJS, TypeScript types; logging stays on stderr for MCP JSON-RPC
+- 🖥️ **CLI** — `npx @loumalouomega/openscad-wasm model.scad -o model.stl`
+- 🔧 **CGAL + Manifold** backends, Manifold by default
 
 > **📚 Full documentation:** <https://loumalouomega.github.io/openscad-wasm/>
 
@@ -70,6 +74,20 @@ const { rc, output } = await evaluateScad(instance, {
 });
 ```
 
+Other formats, meshes, diagnostics:
+
+```js
+import { render, renderToMesh, extractParameters } from '@loumalouomega/openscad-wasm';
+
+const { output, diagnostics, summary } = await render(src, { format: 'stl', summary: true }); // Uint8Array
+const { positions, indices } = await renderToMesh('cube(10);');
+const params = extractParameters(src); // Customizer parameters, no wasm needed
+```
+
+```bash
+npx @loumalouomega/openscad-wasm model.scad -o model.stl -D width=60 --timeout 30000
+```
+
 CJS consumers: `const { renderToCsg } = require('@loumalouomega/openscad-wasm');`
 — every entry is async, no top-level await anywhere.
 
@@ -77,11 +95,16 @@ CJS consumers: `const { renderToCsg } = require('@loumalouomega/openscad-wasm');
 
 | Export | Shape |
 | --- | --- |
-| `initOpenSCAD({ wasmBinary?, wasmPath?, collect?, print?, printErr? })` | Instantiate the module. `wasmBinary` defaults to the shipped `openscad-core.wasm`; all logging goes to stderr by default so fd 1 stays clean for MCP JSON-RPC. |
-| `evaluateScad(instance, { files, args, outPath })` | Stage MEMFS files, `callMain(args)`, read `outPath` back, clean up. Returns `{ rc, output, stderr }`. |
-| `renderToCsg(scadText, { defines?, backend?, extraFiles?, wasmBinary?, wasmPath? })` | One-shot `.scad` → `.csg` on a fresh instance. Throws `ScadWasmError` (`{ rc, stderr }`). |
-| `isOpenScadWasmAbort(message)` | 5th-vocabulary abort classifier (bare-digit exception pointers included) for the kernel worker's reset path. |
-| `getWasmBinary(wasmPath?)` | Read the shipped `.wasm` bytes (for `wasmBinary` injection). |
+| `render(scad, opts)` | Render to any [format](https://loumalouomega.github.io/openscad-wasm/guide/formats) → `{ output, format, stderr, diagnostics, summary? }`. Options: `format`, `backend`, `defines`, `enable`, `parameters`/`parameterSet`, `summary`, `extraFiles`, `libraries`, `fonts`, … |
+| `renderToCsg` / `renderToStl` / `renderToMesh` | Shortcuts → CSG text / binary STL bytes / indexed mesh. |
+| `renderInWorker(scad, opts, { timeoutMs })` | From `…/worker`; hard timeout via worker termination (`ScadTimeoutError`). |
+| `createRenderer({ reuse })` | Renderer with fixed libraries/fonts; optional instance reuse with abort recovery. |
+| `extractParameters(scad)` | Customizer parameters (pure JS). |
+| `initOpenSCAD(opts)` / `evaluateScad(instance, …)` | Low level: instantiate (`collect`, `libraries`, `fonts`, `wasmUrl`…) and run `callMain` (`binary`). |
+| `mountFiles` / `mountLibrary` | Write files / libraries into MEMFS. |
+| `ScadWasmError`, `isOpenScadWasmAbort` | Errors carry `{ rc, stderr, diagnostics }`; abort classifier. |
+
+`png` and `pdf` export are **not available**: upstream's Emscripten build forces `NULLGL` and disables Cairo, and threads (`MANIFOLD_PAR`) are off too. See the [API reference](https://loumalouomega.github.io/openscad-wasm/api/reference).
 
 Single-use instances: OpenSCAD's statics do not survive a second `callMain`
 render on the same instance (the next call throws a bare-digit C++ exception
@@ -95,8 +118,10 @@ to `evaluateScad()` if the build under test proves re-entry.
 openscad/            OpenSCAD source (git submodule, pinned)
 third-party/         patches/ + dependency sources/builds (gitignored)
 scripts/             build-deps.sh, build-wasm.sh, stage-dist.sh
-src/                 hand-written wrapper: openscad.{mjs,cjs,d.ts}
-test/                smoke tests + fixtures
+src/                 hand-written wrapper: openscad.{mjs,cjs,d.ts}, core.mjs, worker*.mjs, cli.mjs
+bin/                 openscad-wasm CLI
+examples/            node/ and browser/ demos
+test/                unit, smoke, feature and browser tests + fixtures
 docs/                VitePress documentation site
 probe-results/       dated build/probe logs
 dist/                build artifacts (gitignored; produced by CI)
@@ -123,14 +148,17 @@ CGAL/gmp/mpfr (Manifold-only). See `THIRD_PARTY_NOTICES.md` for the full list.
 |--------|------|
 | `npm run build:deps` | build C/C++ dependencies into the emsdk sysroot |
 | `npm run build:wasm` | build OpenSCAD with Emscripten |
-| `npm test` | smoke tests (needs `dist/`) |
+| `npm run test:unit` | pure-JS tests (no wasm needed) |
+| `npm test` | unit + smoke + feature + browser tests (wasm tests need `dist/`) |
 | `npm run docs:dev` | live-preview the docs |
 | `npm run docs:build` | build the docs site |
 
 ## Known issues
 
-- Instances are single-use in some builds; `renderToCsg()` instantiates fresh per call (~150 ms).
-- `text()` in evaluated-mesh output needs mounted fonts (CSG export works).
+- Instances are single-use in some builds; `render()` instantiates fresh per call (~150 ms). `createRenderer({ reuse: true })` opts into reuse.
+- `text()` in evaluated meshes needs fonts: pass `fonts: { 'X.ttf': bytes }`.
+- No PNG/PDF export and no threads (forced off by upstream's Emscripten configuration).
+- The new wasm-dependent features (formats, fonts, worker, browser) are covered by tests that run in CI against the full build.
 
 ## Licensing
 

@@ -48,5 +48,7 @@ Keep MEMFS paths short (≤ 10 characters).
 ## Next steps
 
 - [Concepts](/guide/concepts) — why each render uses a fresh instance
+- [Output formats](/guide/formats) — STL, OBJ, 3MF, SVG, …
 - [Rendering](/guide/rendering) — the low-level API
+- [Command line](/guide/cli)
 - [API reference](/api/reference)

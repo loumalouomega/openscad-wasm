@@ -14,3 +14,7 @@ Summary of `probe-results/2026-10-19.md`. Toolchain: Emscripten 6.0.5; upstream 
 | Manifold-only | Non-viable: manifold sources include CGAL headers unconditionally |
 
 Open item: kernel watchdog behaviour for hanging models in a worker.
+
+## Feature limits at the pinned snapshot
+
+Upstream's Emscripten block (`CMakeLists.txt`) forces `ENABLE_CAIRO=OFF` (no PDF), `NULLGL=ON` (no PNG/OpenGL) and `MANIFOLD_PAR=OFF` (no threads). They are documented rather than worked around. STL (binary/ASCII), OBJ, OFF, WRL, 3MF, DXF, SVG, POV, CSG and the debug exports are available.

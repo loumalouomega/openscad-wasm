@@ -37,6 +37,14 @@ npm test
 | `scripts/build-wasm.sh` | Applies patches, configures with `emcmake`/Ninja (`WASM_BUILD_TYPE=node-module`), builds |
 | `scripts/stage-dist.sh` | Copies glue + wasm + the hand-written wrapper into `dist/` |
 
+## Build options
+
+| Variable | Effect |
+| --- | --- |
+| `OPENSCAD_WASM_OPT=-Oz` | optimisation level for `build-wasm.sh` (`-O3` default; `-Os`/`-Oz` for a smaller wasm) |
+
+The build always sets `OPENSCAD_WASM_MEMFS_ONLY=ON` (pure MEMFS root, `ENVIRONMENT=node,web,worker`). Upstream's Emscripten block hard-codes `ENABLE_CAIRO=OFF`, `NULLGL=ON` and `MANIFOLD_PAR=OFF`, so PDF, PNG and threading are not available without patching upstream.
+
 ## CI
 
 `.github/workflows/ci.yml` runs fast syntax/patch checks, then the full build + smoke test, and publishes to npm on `v*` tags. The dependency build is cached by the hash of `scripts/build-deps.sh`.
