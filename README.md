@@ -1,4 +1,4 @@
-# @loumalouomega/openscad-wasm
+# OpenSCAD-WASM
 
 OpenSCAD (CGAL + Manifold geometry backends) compiled to WebAssembly for
 Node — evaluate `.scad` to `.csg`/`.stl` with no `openscad` binary on `PATH`.
