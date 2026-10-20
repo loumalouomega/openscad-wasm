@@ -1,6 +1,6 @@
 {
   "name": "@loumalouomega/openscad-wasm",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "OpenSCAD (Manifold backend) compiled to WebAssembly for Node — evaluate .scad to .csg/.stl with no openscad binary on PATH",
   "license": "GPL-3.0-or-later",
   "author": "Vicente Mataix Ferrándiz",
