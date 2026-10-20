@@ -15,6 +15,11 @@
 # Pinned refs mirror DSchroer/openscad-wasm's Makefile (proven set), except
 # where noted.
 #
+# Host prerequisites (Debian/Ubuntu): autoconf autoconf-archive automake
+# autopoint bison flex gettext gperf libltdl-dev libtool ninja-build meson
+# pkg-config texinfo. `libltdl-dev` ships ltdl.m4 (LT_SYS_SYMBOL_USCORE),
+# which libffi's autogen.sh needs.
+#
 # Usage:
 #   source ~/emsdk-6.0.5/emsdk_env.sh   # emcc, emcmake, ... on PATH
 #   export PATH="$HOME/.local/bin:$PATH"  # gperf etc, if built locally
