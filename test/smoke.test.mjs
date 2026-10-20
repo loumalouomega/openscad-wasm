@@ -1,8 +1,11 @@
-// Smoke test: .scad fixtures -> .csg through the WASM build, diffed against
-// the binary-path oracle (local `openscad` on PATH — 2021.01 in CI here).
-// Mirrors CAD-Preview probe items 3 (correctness) and 7 (timing).
+// Smoke test: .scad fixtures -> .csg through the WASM build.
 //
-// Usage: CAD_PREVIEW_DIR=/home/vicente/src/CAD-Preview node --test test/smoke.test.mjs
+// Fixtures live in test/fixtures/ (override with FIXTURE_DIR, e.g. CAD-Preview's
+// examples/OpenSCAD). When a native `openscad` is on PATH the output is also
+// diffed byte-for-byte against the binary-path oracle; otherwise (CI) each
+// case asserts the expected CSG primitives instead.
+//
+// Usage: node --test test/smoke.test.mjs
 // Requires dist/ (npm run build first). Skips with a clear message otherwise.
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -15,10 +18,24 @@ import { fileURLToPath } from "node:url";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = dirname(HERE);
 const DIST_MJS = join(ROOT, "dist", "openscad.mjs");
-const FIXDIR = join(
-  process.env.CAD_PREVIEW_DIR ?? "/home/vicente/src/CAD-Preview",
-  "examples/OpenSCAD",
-);
+const FIXDIR = process.env.FIXTURE_DIR ?? join(HERE, "fixtures");
+
+const HAS_ORACLE = (() => {
+  try {
+    execFileSync("openscad", ["--version"], { stdio: "ignore" });
+    return true;
+  } catch {
+    return false;
+  }
+})();
+
+// Substrings every correct .csg must contain (used when no oracle is available).
+const EXPECT = {
+  minimal: ["cube(size = 10"],
+  parametric: ["cube(size = [20, 10, 5]"],
+  "include-main": ["cube(size = 8"],
+  "colour-booleans": ["difference()", "sphere("],
+};
 
 const CASES = ["minimal", "parametric", "include-main", "colour-booleans"];
 
@@ -53,9 +70,14 @@ for (const name of CASES) {
     const t0 = Date.now();
     const csg = await renderToCsg(scad, { extraFiles });
     const ms = Date.now() - t0;
-    const oracle = binaryCsg(name);
-    console.log(`${name}: wasm ${ms}ms, ${csg.length} bytes (oracle ${oracle.length})`);
-    assert.equal(csg, oracle);
+    if (HAS_ORACLE) {
+      const oracle = binaryCsg(name);
+      console.log(`${name}: wasm ${ms}ms, ${csg.length} bytes (oracle ${oracle.length})`);
+      assert.equal(csg, oracle);
+    } else {
+      console.log(`${name}: wasm ${ms}ms, ${csg.length} bytes (no oracle on PATH)`);
+      for (const needle of EXPECT[name]) assert.ok(csg.includes(needle), `missing ${needle}`);
+    }
   });
 }
 
