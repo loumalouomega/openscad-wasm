@@ -60,18 +60,60 @@ clone_at() { # name repo ref
   fi
 }
 
-fetch_tar() { # name url
-  local dest="$SRC/$1"
-  if [ ! -d "$dest" ]; then
-    echo "--- fetching $1"
-    mkdir -p "$ROOT/third-party/dl"
-    local tar="$ROOT/third-party/dl/$1.tar.xz"
-    [ -f "$tar" ] || wget -O "$tar" "$2"
-    mkdir -p "$dest"
-    tar xf "$tar" -C "$dest" --strip-components=1
+sha256_of() { # file
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "$1" | awk '{print $1}'
   else
-    echo "--- $1 already fetched"
+    shasum -a 256 "$1" | awk '{print $1}'
   fi
+}
+
+fetch_tar() { # name sha256 url [fallback-url...]
+  local dest="$SRC/$1" name="$1" sha="$2"
+  shift 2
+  if [ -d "$dest" ]; then
+    echo "--- $name already fetched"
+    return
+  fi
+
+  echo "--- fetching $name"
+  mkdir -p "$ROOT/third-party/dl"
+  local tar="$ROOT/third-party/dl/$name.tar.xz"
+  local tmp="$tar.part"
+  local ok=0
+  local url
+
+  # A previous run may have cached a partial archive (CI saves the cache even
+  # when the build fails); never trust an existing file without its checksum.
+  if [ -f "$tar" ] && [ "$(sha256_of "$tar")" = "$sha" ]; then
+    ok=1
+  else
+    rm -f "$tar"
+  fi
+
+  if [ "$ok" -eq 0 ]; then
+    for url in "$@"; do
+      echo "--- downloading $url"
+      # Bound each attempt: gmplib.org in particular can black-hole CI runners
+      # for minutes per retry. Partial files are removed before the next mirror.
+      if wget -nv --timeout=30 --tries=3 --waitretry=2 -O "$tmp" "$url" &&
+         [ "$(sha256_of "$tmp")" = "$sha" ]; then
+        mv "$tmp" "$tar"
+        ok=1
+        break
+      fi
+      echo "--- download failed, trying next mirror" >&2
+      rm -f "$tmp"
+    done
+  fi
+
+  if [ "$ok" -ne 1 ]; then
+    echo "ERROR: could not download $name (checksum $sha) from any mirror" >&2
+    return 1
+  fi
+
+  mkdir -p "$dest"
+  tar xf "$tar" -C "$dest" --strip-components=1
 }
 
 echo "sysroot: $SYSROOT"
@@ -216,7 +258,11 @@ fi
 
 # ---- gmp (CGAL) ----
 if ! is_done gmp; then
-  fetch_tar gmp https://gmplib.org/download/gmp/gmp-6.3.0.tar.xz
+  fetch_tar gmp a3c2b80201b89e68616f4ad30bc66aee4927c3ce50e33929ca819d5c43538898 \
+    https://ftpmirror.gnu.org/gmp/gmp-6.3.0.tar.xz \
+    https://ftp.gnu.org/gnu/gmp/gmp-6.3.0.tar.xz \
+    https://mirrors.kernel.org/gnu/gmp/gmp-6.3.0.tar.xz \
+    https://gmplib.org/download/gmp/gmp-6.3.0.tar.xz
   ( cd "$SRC/gmp" &&
     emconfigure ./configure --disable-assembly --host none --enable-cxx \
       --prefix="$SYSROOT" HOST_CC=gcc &&
@@ -226,7 +272,10 @@ fi
 
 # ---- mpfr (CGAL) ----
 if ! is_done mpfr; then
-  fetch_tar mpfr https://www.mpfr.org/mpfr-4.2.1/mpfr-4.2.1.tar.xz
+  fetch_tar mpfr 277807353a6726978996945af13e52829e3abd7a9a5b7fb2793894e18f1fcbb2 \
+    https://ftpmirror.gnu.org/mpfr/mpfr-4.2.1.tar.xz \
+    https://ftp.gnu.org/gnu/mpfr/mpfr-4.2.1.tar.xz \
+    https://www.mpfr.org/mpfr-4.2.1/mpfr-4.2.1.tar.xz
   ( cd "$SRC/mpfr" &&
     emconfigure ./configure --host none --with-gmp="$SYSROOT" \
       --prefix="$SYSROOT" &&
@@ -246,7 +295,8 @@ fi
 
 # ---- boost (regex, program_options, filesystem, system) ----
 if ! is_done boost; then
-  fetch_tar boost https://github.com/boostorg/boost/releases/download/boost-1.87.0/boost-1.87.0-b2-nodocs.tar.xz
+  fetch_tar boost 3abd7a51118a5dd74673b25e0a3f0a4ab1752d8d618f4b8cea84a603aeecc680 \
+    https://github.com/boostorg/boost/releases/download/boost-1.87.0/boost-1.87.0-b2-nodocs.tar.xz
   ( cd "$SRC/boost" &&
     sed -i -E 's/-fwasm-exceptions/-fexceptions/g' tools/build/src/tools/emscripten.jam &&
     ./bootstrap.sh &&
